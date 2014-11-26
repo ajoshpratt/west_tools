@@ -594,9 +594,14 @@ cdef class StreamingStats2D:
                         self._n[i,j] += 1
                         delta = x[i,j] - self._M1[i,j]
                         delta_n = delta / self._n[i,j]
+#                        delta_n = x[i,j]
                         term1 = delta * delta_n * n1
-                        self._M1[i,j] += delta_n
+                        self._M1[i,j] += x[i,j]
                         self._M2[i,j] += term1
+#                        sum += delta_n
+#                for j in range(self._sz1):
+#                    if not mask[i,j]:
+#                        self._M1[i,j] = self._M1[i,j] / sum
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -630,12 +635,20 @@ cdef class StreamingStats2D:
     property mean:
         def __get__(self):
             tmp = numpy.asarray(self._M1)
+            for i in range(self._sz0):
+                sum = tmp[i,:].sum()
+                for j in range(self._sz1):
+                    tmp[i,j] = tmp[i,j] /  sum
             return numpy.nan_to_num(tmp)
 
     property var:
         def __get__(self):
             tmp_m = numpy.asarray(self._M2)
             tmp_n = numpy.asarray(self._n)
+            for i in range(self._sz0):
+                sum = tmp_m[i,:].sum()
+                for j in range(self._sz1):
+                    tmp_m[i,j] = tmp_m[i,j] / sum
             return numpy.nan_to_num(tmp_m / tmp_n)
 
     property n:
